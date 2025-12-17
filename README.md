@@ -1,45 +1,54 @@
-# 小红书智能发布工作流 (Xiaohongshu Smart Publisher)
+# 微信公众号智能发布工作流 (WeChat Official Account Publisher)
 
-这是一个基于 Claude Code 的小红书内容智能发布工具，能够自动将文本内容格式化为符合小红书规范的标题和正文，自动识别媒体文件，并通过 MCP 服务发布内容。
+这是一个基于 Claude Code 的微信公众号内容智能发布工具，能够自动将文本内容格式化为符合公众号规范的标题和正文，自动识别媒体文件，并通过第三方API工具发布内容。
 
 ## 🌟 主要功能
 
 ### 📝 内容智能整理
-- 自动将文本格式化为符合小红书规范的标题（≤20字）和正文
-- 智能截断标题，确保符合小红书硬性要求
+- 自动将文本格式化为符合公众号规范的标题（≤64字）和正文
+- 智能截断标题，确保符合公众号建议长度
 - 建议相关话题标签
-- 支持内容优化建议
+- 支持内容优化建议和字数统计
 
 ### 📸 媒体自动识别
 - 扫描指定目录，自动识别所有图片和视频文件
 - 支持多种图片格式：.jpg, .jpeg, .png, .gif, .webp, .bmp
 - 支持多种视频格式：.mp4, .mov, .avi, .mkv等
-- 返回所有媒体文件的绝对路径列表
+- 检查文件大小，确保符合公众号限制（图片≤2MB）
 
 ### 🚀 智能发布
-- 根据媒体类型自动选择合适的发布方式（图文/视频）
-- 无缝对接 xiaohongshu-mcp 工具
+- 根据媒体类型自动选择合适的发布方式（图文/视频/纯文本）
+- 支持 Wechaty、Offiaccount 等开源工具
+- 灵活的API集成方案
 - 支持批量处理和发布
 
 ## 📁 项目结构
 
 ```
-xiaohongshu-workflow/
+wechat-workflow/
 ├── .claude/
-│   └── xhs-publisher/
+│   ├── xhs-publisher/                  # 小红书技能（已弃用）
+│   │   ├── SKILL.md
+│   │   ├── scripts/
+│   │   │   ├── format_content.py
+│   │   │   └── analyze_media.py
+│   │   └── references/
+│   │       ├── content_guidelines.md
+│   │       └── mcp_tools.md
+│   └── wechat-publisher/               # 微信公众号技能
 │       ├── SKILL.md                    # 技能使用说明
 │       ├── scripts/
 │       │   ├── format_content.py       # 内容格式化脚本
 │       │   └── analyze_media.py        # 媒体分析脚本
 │       └── references/
-│           ├── content_guidelines.md   # 内容规范参考
-│           └── mcp_tools.md           # MCP工具参考
+│           ├── wechat_guidelines.md    # 公众号内容规范
+│           └── wechat_tools.md         # API工具参考
 ├── claudecode.md                        # Claude Code 教程原文
 ├── README.md                            # 项目说明文档
 ├── .gitignore                          # Git忽略文件
-├── xiaohongshu-login-darwin-arm64      # 登录工具 (macOS ARM64)
-├── xiaohongshu-mcp-darwin-arm64        # MCP服务 (macOS ARM64)
-├── xiaohongshu-mcp-darwin-amd64        # MCP服务 (macOS Intel)
+├── xiaohongshu-login-darwin-arm64      # 旧版登录工具（保留）
+├── xiaohongshu-mcp-darwin-arm64        # 旧版MCP服��（保留）
+├── xiaohongshu-mcp-darwin-amd64        # 旧版MCP服务（保留）
 └── test-media/                         # 测试媒体文件目录
     ├── breakfast_test.jpg
     └── claude-code-tutorial.jpg
@@ -49,38 +58,77 @@ xiaohongshu-workflow/
 
 ### 前置要求
 
-1. **xiaohongshu-mcp 服务已启动**
-   ```bash
-   # 启动 MCP 服务
-   ./xiaohongshu-mcp-darwin-arm64
+#### 1. 选择开发工具
 
-   # 服务地址：http://localhost:18060/mcp
-   ```
+**推荐方案一：Wechaty（功能全面）**
+```bash
+# 安装Wechaty
+pip install wechaty  # Python版本
+# 或者
+npm install wechaty  # Node.js版本
+```
 
-2. **完成登录**
-   ```bash
-   # 运行登录工具
-   ./xiaohongshu-login-darwin-arm64
-   ```
+**推荐方案二：Offiaccount（轻量级）**
+```bash
+# 安装Offiaccount
+npm install offiaccount
+```
+
+#### 2. 公众号配置
+- 已认证的微信公众号（服务号或订阅号）
+- 获取开发者ID（AppID）和开发者密钥（AppSecret）
+- 配置服务器URL、Token和消息加解密密钥
 
 ### 基本使用
 
 #### 1. 内容格式化
 ```bash
-# 格式化文本内容
-python3 .claude/xhs-publisher/scripts/format_content.py "你的文本内容"
+# 格式化文本内容（支持公众号规范）
+python3 .claude/wechat-publisher/scripts/format_content.py "你的文本内容"
 ```
 
 #### 2. 媒体文件分析
 ```bash
-# 分析媒体目录
-python3 .claude/xhs-publisher/scripts/analyze_media.py "/path/to/media/directory"
+# 分析媒体目录（检查文件大小是否符合要求）
+python3 .claude/wechat-publisher/scripts/analyze_media.py "/path/to/media/directory"
 ```
 
 #### 3. 发布内容
-根据媒体类型选择发布方式：
-- **有图片无视频**：使用 `publish_content`
-- **有视频**：使用 `publish_with_video`
+
+**使用Wechaty示例**：
+```python
+from wechaty import Wechaty
+import asyncio
+
+async def publish_article():
+    bot = Wechaty()
+    await bot.start()
+
+    # 发布公众号文章
+    await bot.publish_article(
+        title="文章标题",
+        content="文章内容",
+        media_ids=["图片媒体ID"]
+    )
+```
+
+**使用Offiaccount示例**：
+```javascript
+const Offiaccount = require('offiaccount');
+const api = new Offiaccount({
+  appId: 'your_app_id',
+  appSecret: 'your_app_secret'
+});
+
+// 上传并发布图文消息
+api.uploadNewsMaterial({
+  articles: [{
+    title: "文章标题",
+    content: "文章内容",
+    thumb_media_id: "封面图片ID"
+  }]
+});
+```
 
 ## 📋 使用示例
 
@@ -105,20 +153,38 @@ python3 .claude/xhs-publisher/scripts/analyze_media.py "/path/to/videos"
 publish_with_video --title "10分钟居家健身教程" --content "..." --video "/path/to/video.mp4"
 ```
 
-## 📊 内容规范
+## 📊 公众号内容规范
 
-- **标题**：最多20字（硬性限制）
-- **图片**：1-9张，推荐3:4或1:1尺寸
-- **视频**：推荐9:16竖屏，15秒-5分钟
-- **标签**：3-5个相关话题标签
-- **发布**：建议黄金时段（早7-9点，午12-14点，晚18-23点）
+### 标题规范
+- **建议长度**：20-64个字符（约10-32个汉字）
+- **最长限制**：64个字符（硬性限制）
+- **最佳实践**：简洁明了，包含关键词
+
+### 正文规范
+- **建议字数**：1000-3000字（最佳阅读体验）
+- **最短要求**：500字以上
+- **最长限制**：5000字以内
+- **格式支持**：富文本编辑，支持小标题、段落分隔
+
+### 媒体要求
+- **图片**：文件大小≤2MB，推荐宽度900px
+- **视频**：文件大小建议≤100MB，时长30秒-10分钟
+- **格式**：图片支持JPG/PNG/GIF，视频支持MP4/MOV/AVI
+- **数量**：每日最多发布8篇文章
+
+### 发布策略
+- **黄金时段**：早7-9点、午12-14点、晚18-23点
+- **内容类型**：教程、分析、故事、资讯等
+- **质量要求**：原创内容，符合平台规范
 
 ## 🛠️ 技术栈
 
 - **Python 3.8+**：脚本开发语言
-- **MCP (Model Context Protocol)**：与AI模型的通信协议
+- **Node.js**：微信公众号API开发（可选）
 - **Claude Code**：AI编程助手
-- **小红书MCP服务**：小红书API集成
+- **Wechaty**：微信公众号SDK（推荐）
+- **Offiaccount**：轻量级公众号API工具
+- **微信公众号API**：官方API集成
 
 ## 📦 依赖项
 
@@ -130,18 +196,28 @@ pip install Pillow  # 用于图片处理
 ## ⚠️ 注意事项
 
 ### 账号安全
-- 登录后不要在其他网页端登录同一账号
-- 避免频繁操作，遵守平台限制（每日最多50篇）
+- 妥善保管AppID和AppSecret
+- 定期更换access_token
+- 遵守平台API调用频率限制
 
 ### 内容质量
-- 确保内容原创或有授权
-- 避免违规内容
-- 保持真实性
+- 确保内容原创或有明确授权
+- 避免违规内容和敏感词汇
+- 保持内容的真实性和准确性
+- 遵守微信公众平台运营规范
 
 ### 技术限制
-- 标题严格限制20字
-- 视频仅支持本地文件
-- 图片建议1-9张
+- 标题严格限制64个字符
+- 图片文件大小≤2MB
+- 视频文件建议≤100MB
+- 每日最多发布8篇文章
+- API调用有频率限制
+
+### 开发建议
+- 使用HTTPS协议进行API调用
+- 实现合理的错误处理和重试机制
+- 缓存常用数据，减少API调用
+- 定期备份重要数据
 
 ## 🤝 贡献指南
 
@@ -160,8 +236,10 @@ pip install Pillow  # 用于图片处理
 ## 🙏 致谢
 
 - [Claude Code](https://claude.ai/code) - AI编程助手
-- 小红书平台 - 内容发布目标平台
-- MCP协议 - AI模型通信标准
+- [Wechaty](https://github.com/wechaty/wechaty) - 微信开发SDK
+- [Offiaccount](https://github.com/wechaty/offiaccount) - 公众号API工具
+- 微信公众号平台 - 内容发布目标平台
+- 开源社区 - 提供了丰富的开发工具和资源
 
 ## 📞 联系方式
 
@@ -171,4 +249,4 @@ pip install Pillow  # 用于图片处理
 
 ---
 
-**让AI帮你轻松管理小红书内容发布！** 🎉
+**让AI帮你轻松管理微信公众号内容发布！** 🎉
