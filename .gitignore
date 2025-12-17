@@ -1,0 +1,57 @@
+# 二进制可执行文件
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+xiaohongshu-*
+
+# Cookie文件（包含敏感信息）
+cookies.json
+cookies*.json
+
+# 临时文件
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# 测试媒体文件
+test-media/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.bmp
+*.mp4
+*.mov
+*.avi
+*.mkv
+
+# 编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 日志文件
+*.log
+logs/
+
+# 缓存目录
+.cache/
+__pycache__/
+*.pyc
+*.pyo
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# 依赖目录
+node_modules/
+venv/
+env/
